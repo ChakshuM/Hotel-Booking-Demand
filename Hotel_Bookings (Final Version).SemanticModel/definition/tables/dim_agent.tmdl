@@ -1,0 +1,40 @@
+table dim_agent
+	lineageTag: c7ddaf8a-880a-405b-b9f2-61102ff0fd1d
+
+	column agent
+		dataType: string
+		lineageTag: 9bdd8dc2-1a1c-4f68-88ea-083aab3cf682
+		summarizeBy: none
+		sourceColumn: agent
+
+		annotation SummarizationSetBy = Automatic
+
+	column agent_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 8eb751f1-afbf-41c6-84aa-d390853c9103
+		summarizeBy: none
+		sourceColumn: agent_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_agent = m
+		mode: import
+		queryGroup: dimension_tables
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"agent"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "agent_key"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

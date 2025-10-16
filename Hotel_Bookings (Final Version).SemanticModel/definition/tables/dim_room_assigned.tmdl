@@ -1,0 +1,41 @@
+table dim_room_assigned
+	lineageTag: 00bc0161-4b6a-4f1f-b73d-15ad9db4e44c
+
+	column assigned_room_type
+		dataType: string
+		lineageTag: 646d2625-24a6-474b-a790-384d648c88f2
+		summarizeBy: none
+		sourceColumn: assigned_room_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column room_assigned_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e49a7f35-e42d-46d2-9fde-f3b56570b6a9
+		summarizeBy: none
+		sourceColumn: room_assigned_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_room_assigned = m
+		mode: import
+		queryGroup: dimension_tables
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"assigned_room_type"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Sorted Rows" = Table.Sort(#"Removed Duplicates",{{"assigned_room_type", Order.Ascending}}),
+				    #"Added Index" = Table.AddIndexColumn(#"Sorted Rows", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "room_assigned_key"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

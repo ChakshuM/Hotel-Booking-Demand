@@ -1,0 +1,62 @@
+table dim_geography
+	lineageTag: fe0e034c-5f2a-45f9-9a7b-bb4569d94901
+
+	column country
+		dataType: string
+		lineageTag: ba784cb2-57d7-429e-9c19-efdb0b1d8b6b
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: country
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 13822f7f-c7a4-4c8f-bf70-d4ffe1b21cd3
+		summarizeBy: none
+		sourceColumn: country_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Country_Name
+		dataType: string
+		lineageTag: 26d81557-b838-4174-b39b-4e8fa484a22a
+		dataCategory: Country
+		summarizeBy: none
+		sourceColumn: Country_Name
+
+		annotation SummarizationSetBy = Automatic
+
+	column Continent
+		dataType: string
+		lineageTag: 70cc0663-d994-4f62-bb6b-33516c78e7e9
+		dataCategory: Continent
+		summarizeBy: none
+		sourceColumn: Continent
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_geography = m
+		mode: import
+		queryGroup: dimension_tables
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"country"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "country_key"}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Renamed Columns", {"country"}, country, {"country_code"}, "country.1", JoinKind.LeftOuter),
+				    #"Expanded country.1" = Table.ExpandTableColumn(#"Merged Queries", "country.1", {"country_name", "continent"}, {"country.1.country_name", "country.1.continent"}),
+				    #"Renamed Columns1" = Table.RenameColumns(#"Expanded country.1",{{"country.1.country_name", "Country_Name"}, {"country.1.continent", "Continent"}})
+				in
+				    #"Renamed Columns1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

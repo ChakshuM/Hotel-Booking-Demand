@@ -1,0 +1,53 @@
+expression dim_market_bridge =
+		let
+		    Source = hotel_staging,
+		    #"Removed Other Columns" = Table.SelectColumns(Source,{"market_segment", "distribution_channel", "deposit_type"}),
+		    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+		    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type),
+		    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "market_key"}}),
+		    #"Merged Queries" = Table.NestedJoin(#"Renamed Columns", {"distribution_channel"}, dim_distribution_channel, {"distribution_channel"}, "dim_market (2)", JoinKind.LeftOuter),
+		    #"Expanded dim_market (2)" = Table.ExpandTableColumn(#"Merged Queries", "dim_market (2)", {"distribution_channel_key"}, {"distribution_channel_key"}),
+		    #"Merged Queries1" = Table.NestedJoin(#"Expanded dim_market (2)", {"deposit_type"}, dim_deposit_type, {"deposit_type"}, "dim_market (3)", JoinKind.LeftOuter),
+		    #"Expanded dim_market (3)" = Table.ExpandTableColumn(#"Merged Queries1", "dim_market (3)", {"deposit_type_key"}, {"deposit_type_key"})
+		in
+		    #"Expanded dim_market (3)"
+	lineageTag: 81f2a4d9-16ee-4e3a-9270-d521d94d5d37
+	queryGroup: dimension_tables\dim_market
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression hotel_staging =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\Chakshu\Humber College\Class Notes\Semester 4\Business Intelligence - BIA-5401-0LB\Group\hotel_bookings.csv"),[Delimiter=",", Columns=32, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Promoted Headers" = Table.PromoteHeaders(Source, [PromoteAllScalars=true]),
+		    #"Changed Type" = Table.TransformColumnTypes(#"Promoted Headers",{{"hotel", type text}, {"is_canceled", Int64.Type}, {"lead_time", Int64.Type}, {"arrival_date_year", Int64.Type}, {"arrival_date_month", type text}, {"arrival_date_week_number", Int64.Type}, {"arrival_date_day_of_month", Int64.Type}, {"stays_in_weekend_nights", Int64.Type}, {"stays_in_week_nights", Int64.Type}, {"adults", Int64.Type}, {"children", Int64.Type}, {"babies", Int64.Type}, {"meal", type text}, {"country", type text}, {"market_segment", type text}, {"distribution_channel", type text}, {"is_repeated_guest", Int64.Type}, {"previous_cancellations", Int64.Type}, {"previous_bookings_not_canceled", Int64.Type}, {"reserved_room_type", type text}, {"assigned_room_type", type text}, {"booking_changes", Int64.Type}, {"deposit_type", type text}, {"agent", type text}, {"company", type text}, {"days_in_waiting_list", Int64.Type}, {"customer_type", type text}, {"adr", type number}, {"required_car_parking_spaces", Int64.Type}, {"total_of_special_requests", Int64.Type}, {"reservation_status", type text}, {"reservation_status_date", type date}}),
+		    #"Filtered Rows" = Table.SelectRows(#"Changed Type", each ([country] <> "NULL")),
+		    #"Removed Errors" = Table.RemoveRowsWithErrors(#"Filtered Rows", {"children"}),
+		    #"Replaced Value" = Table.ReplaceValue(#"Removed Errors","NULL","Undefiened",Replacer.ReplaceText,{"agent"}),
+		    #"Replaced Value1" = Table.ReplaceValue(#"Replaced Value","NULL","Undefiened",Replacer.ReplaceText,{"company"})
+		in
+		    #"Replaced Value1"
+	lineageTag: 77125150-338a-463a-8ee2-748a780b3d06
+	queryGroup: 'Source Queries'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+
+expression country =
+		let
+		    Source = Csv.Document(File.Contents("C:\Users\Chakshu\Downloads\country.csv"),[Delimiter=",", Columns=3, Encoding=1252, QuoteStyle=QuoteStyle.None]),
+		    #"Changed Type" = Table.TransformColumnTypes(Source,{{"Column1", type text}, {"Column2", type text}, {"Column3", type text}}),
+		    #"Promoted Headers" = Table.PromoteHeaders(#"Changed Type", [PromoteAllScalars=true]),
+		    #"Changed Type1" = Table.TransformColumnTypes(#"Promoted Headers",{{"country_code", type text}, {"country_name", type text}, {"continent", type text}})
+		in
+		    #"Changed Type1"
+	lineageTag: e6eec74f-5f6a-4ea8-ba7e-5ee70c32886e
+	queryGroup: 'Source Queries'
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

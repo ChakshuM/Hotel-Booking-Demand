@@ -1,0 +1,40 @@
+table dim_hotel
+	lineageTag: 1a8be58c-bb54-4313-9a84-8f73d39ff177
+
+	column hotel
+		dataType: string
+		lineageTag: 448afd41-b1c2-49a6-ae80-180b7ed5b5c5
+		summarizeBy: none
+		sourceColumn: hotel
+
+		annotation SummarizationSetBy = Automatic
+
+	column hotel_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 36a1478c-eb08-4ab6-998b-2aed1138f71e
+		summarizeBy: none
+		sourceColumn: hotel_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_hotel = m
+		mode: import
+		queryGroup: dimension_tables
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"hotel"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "hotel_key"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

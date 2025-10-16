@@ -1,0 +1,55 @@
+table dim_customer
+	lineageTag: b7ad20b5-7bce-4b4d-a822-69620d4c2110
+
+	column customer_type
+		dataType: string
+		lineageTag: a8b24384-b03c-49f7-8339-89f0d84f85d9
+		summarizeBy: none
+		sourceColumn: customer_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column is_repeated_guest
+		dataType: int64
+		formatString: 0
+		lineageTag: 82a660aa-0db6-4248-9dc1-15a66681e4ff
+		summarizeBy: none
+		sourceColumn: is_repeated_guest
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 851bfa9e-278a-44fb-ba1e-b8e8e99c897e
+		summarizeBy: none
+		sourceColumn: customer_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column Repeated_Customer = IF(dim_customer[is_repeated_guest] = 0, "Not Repeated" , "Repeated")
+		lineageTag: 5f5d0e3e-92e5-46bb-bba6-2bab60f758f6
+		summarizeBy: none
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_customer = m
+		mode: import
+		queryGroup: dimension_tables
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"customer_type", "is_repeated_guest"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "customer_key"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

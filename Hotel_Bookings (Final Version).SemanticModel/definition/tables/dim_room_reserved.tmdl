@@ -1,0 +1,41 @@
+table dim_room_reserved
+	lineageTag: 515fd9d2-987e-45ef-b382-b6b471fce111
+
+	column reserved_room_type
+		dataType: string
+		lineageTag: 485f60c6-8f25-4971-a2c7-8743ac9a031d
+		summarizeBy: none
+		sourceColumn: reserved_room_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column room_reserved_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 453378ad-8df4-409f-8086-660c725c0f6d
+		summarizeBy: none
+		sourceColumn: room_reserved_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_room_reserved = m
+		mode: import
+		queryGroup: dimension_tables
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"reserved_room_type"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Sorted Rows" = Table.Sort(#"Removed Duplicates",{{"reserved_room_type", Order.Ascending}}),
+				    #"Added Index" = Table.AddIndexColumn(#"Sorted Rows", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "room_reserved_key"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

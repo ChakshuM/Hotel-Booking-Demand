@@ -1,0 +1,203 @@
+table dim_Calendar
+	lineageTag: 79ef6848-a9a6-46bd-9267-f744bc669753
+
+	column Date
+		formatString: General Date
+		lineageTag: a41bb41e-8480-4bf8-bf06-a7643a4b6261
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Date]
+
+		variation Variation
+			isDefault
+			relationship: 73452d93-685d-4e75-bb9e-efd55e5cef58
+			defaultHierarchy: LocalDateTable_db2716d3-4c60-4b1d-aafd-2b8f2d7d5e92.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+	column Year
+		formatString: 0
+		lineageTag: 3a6d1217-3b7e-4dd9-a022-1216929ef75e
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Month Num'
+		formatString: 0
+		lineageTag: 7a594d91-bd38-429e-99c1-f37db42c0e28
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Month Num]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Day Num'
+		formatString: 0
+		lineageTag: 79659009-1580-459c-8a59-f5c960e02944
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Week Day Num]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Quarter
+		formatString: 0
+		lineageTag: e38879f4-bd5b-47eb-9e65-0faeea0402a4
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Quarter]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Week Day'
+		formatString: 0
+		lineageTag: d2f7b370-21f8-433c-94b1-5a9c281ddaf9
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Week Day]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Day
+		formatString: 0
+		lineageTag: 5da4878d-074a-4a40-90c6-abcf70ece726
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Day]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Month
+		lineageTag: 6fbe4850-02af-45fd-8016-821e9a314fab
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Month]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Week
+		lineageTag: ebd22eb8-5da3-4c56-861c-34bc80618387
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Week]
+		sortByColumn: 'Week Day'
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Quarter Number'
+		lineageTag: 2ae04aa4-5781-43a3-939e-b84bde252cb6
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Quarter Number]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year Month'
+		lineageTag: 6c174bf1-f40f-4c69-afda-1d44ddd9053b
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year Month]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year Month Sort'
+		lineageTag: 0f24c143-cfef-4c17-be2d-59bb1c9bb1bb
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year Month Sort]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year Quarter'
+		lineageTag: 17c90073-cf34-4a8e-9a43-84165eab01a2
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year Quarter]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Year Quarter Sort'
+		lineageTag: 1768515f-3129-4aa0-acbb-b037a7f4af7e
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Year Quarter Sort]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fiscal Year'
+		formatString: 0
+		lineageTag: 2051e618-a157-4f6f-ab76-45063ae37c22
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Fiscal Year]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fiscal Month'
+		formatString: 0
+		lineageTag: 619de734-9298-4efd-8f5c-50516c4464b4
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Fiscal Month]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fiscal Quarter'
+		formatString: 0
+		lineageTag: 7e19ef8f-9dea-4f2d-917e-d4f9d49b5406
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Fiscal Quarter]
+
+		annotation SummarizationSetBy = Automatic
+
+	column 'Fiscal Week'
+		formatString: 0
+		lineageTag: b7498418-bbea-4b27-95cd-2f369781dfab
+		summarizeBy: sum
+		isNameInferred
+		sourceColumn: [Fiscal Week]
+
+		annotation SummarizationSetBy = Automatic
+
+	column Is_Weekend
+		lineageTag: e3eb7090-780d-4335-b028-f07ee82d0a8c
+		summarizeBy: none
+		isNameInferred
+		sourceColumn: [Is_Weekend]
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_Calendar = calculated
+		mode: import
+		source = ```
+				
+				ADDCOLUMNS (
+				    CALENDAR (DATE (2014,1,1), DATE (2017,12,31)),
+				    "Year", YEAR([Date]),
+				    "Month Num", MONTH([Date]),
+				    "Week Day Num", WEEKDAY([Date],2), -- 1 = Monday, 7 = Sunday
+				    "Quarter", QUARTER([Date]),
+				    "Week Day", WEEKDAY([Date]),
+				    "Day", DAY([Date]),
+				    "Month", FORMAT([Date],"MMMM"),
+				    "Week", FORMAT([Date],"dddd"),
+				    "Quarter Number", "Q"&QUARTER([Date]),
+				    "Year Month", YEAR([Date]) & " " & FORMAT([Date],"MMMM"),
+				    "Year Month Sort", YEAR([Date]) & MONTH([Date]),
+				    "Year Quarter", YEAR([Date]) & " Q" & QUARTER([Date]),
+				    "Year Quarter Sort", YEAR([Date]) & QUARTER([Date]),
+				    "Fiscal Year", YEAR(EDATE([Date],11)),
+				    "Fiscal Month", MONTH(EDATE([Date],11)),
+				    "Fiscal Quarter", QUARTER(EDATE([Date],11)),
+				    "Fiscal Week", WEEKNUM(EDATE([Date],11)),
+				    -- New Weekend Indicator
+				    "Is_Weekend", IF(WEEKDAY([Date],2) >= 6, "Weekend", "Weekday")
+				)
+				
+				```
+
+	annotation PBI_Id = 1e0b613f58c24d2984f69aec46539ef1
+

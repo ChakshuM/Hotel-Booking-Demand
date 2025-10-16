@@ -1,0 +1,42 @@
+table dim_distribution_channel
+	lineageTag: ecbc5350-12fa-42f0-b01f-2feca7e4fd9b
+
+	column distribution_channel
+		dataType: string
+		lineageTag: 3c00f842-257e-4ca0-a933-d6d6f63e0548
+		summarizeBy: none
+		sourceColumn: distribution_channel
+
+		annotation SummarizationSetBy = Automatic
+
+	column distribution_channel_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 85a84281-aeb7-4c56-bd3b-fc4eb74bc5ac
+		summarizeBy: none
+		sourceColumn: distribution_channel_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_distribution_channel = m
+		mode: import
+		queryGroup: dimension_tables\dim_market
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"market_segment", "distribution_channel", "deposit_type"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Removed Columns" = Table.RemoveColumns(#"Removed Duplicates",{"market_segment", "deposit_type"}),
+				    #"Removed Duplicates1" = Table.Distinct(#"Removed Columns"),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates1", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "distribution_channel_key"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

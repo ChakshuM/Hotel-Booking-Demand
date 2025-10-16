@@ -1,0 +1,641 @@
+table fact_bookings
+	lineageTag: 6f8874b9-4947-4eb6-9d71-cc586bd108a8
+
+	measure 'Total Nights' = SUMX(Fact_Bookings, Fact_Bookings[stays_in_week_nights] + Fact_Bookings[stays_in_weekend_nights])
+		formatString: 0
+		lineageTag: 702dd988-6895-4ec3-af52-13f78586117a
+
+	measure 'Total Guests' = SUMX(Fact_Bookings, Fact_Bookings[adults] + Fact_Bookings[children] + Fact_Bookings[babies])
+		formatString: 0
+		lineageTag: a35b3bb2-b074-40c3-a3b7-a81daf5e7d59
+
+	measure 'Cancellation Rate' =
+			
+			DIVIDE(
+			    CALCULATE(COUNTROWS('fact_bookings'), 'fact_bookings'[is_canceled] = 1),
+			    COUNTROWS('fact_bookings'),
+			    0
+			)
+		formatString: 0%;-0%;0%
+		lineageTag: cff7516a-842f-4cb4-9112-968dfeb70944
+
+	measure 'Total Bookings' = ```
+			COUNTROWS('fact_bookings')
+			
+			```
+		formatString: 0
+		lineageTag: c446de00-2827-47ae-9ff8-c6453f93a4de
+
+	measure 'Successful Booking Rate' =
+			
+			DIVIDE(
+			    CALCULATE(
+			        COUNTROWS('fact_bookings'),
+			        'fact_bookings'[is_canceled] = 0
+			    ),
+			    COUNTROWS('fact_bookings'),
+			    0
+			)
+		formatString: 0%;-0%;0%
+		lineageTag: ee0037c1-a6e8-4ccf-8107-8c4cdff09b14
+
+	measure 'Booking Rate Comparison' = ```
+			
+			VAR RateComparisonTBL =
+			    ADDCOLUMNS (
+			        SUMMARIZE (
+			            dim_Calendar,
+			            dim_Calendar[Year Quarter]
+			        ),
+			        "SuccessfulRate", [Successful Booking Rate],
+			        "CancellationRate", [Cancellation Rate]
+			    )
+			
+			VAR SuccessfulRateSum =
+			    SUMX ( RateComparisonTBL, [SuccessfulRate] )
+			
+			VAR CancellationRateSum =
+			    SUMX ( RateComparisonTBL, [CancellationRate] )
+			
+			RETURN
+			    DIVIDE (
+			        (SuccessfulRateSum - CancellationRateSum),
+			        CancellationRateSum,
+			        0
+			    )
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 5a1f5759-54d4-4f34-ac1e-9a0dedffa52c
+
+	measure 'Cancellation Rate YoY' = ```
+			
+			VAR CurrRate =
+			    DIVIDE (
+			        CALCULATE (
+			            COUNTROWS ( fact_bookings ),
+			            fact_bookings[is_canceled] = 1
+			        ),
+			        COUNTROWS ( fact_bookings ),
+			        0
+			    )
+			VAR PrevRate =
+			    CALCULATE (
+			        DIVIDE (
+			            CALCULATE (
+			                COUNTROWS ( fact_bookings ),
+			                fact_bookings[is_canceled] = 1
+			            ),
+			            COUNTROWS ( fact_bookings ),
+			            0
+			        ),
+			        SAMEPERIODLASTYEAR ( dim_Calendar[Date] )
+			    )
+			RETURN
+			DIVIDE ( CurrRate - PrevRate, PrevRate, 0 )
+			
+			```
+		lineageTag: 8847b954-5a88-4efa-a718-29b5ce150afb
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Canceled Bookings' =
+			
+			CALCULATE(
+			    COUNTROWS(fact_bookings),
+			    fact_bookings[is_canceled] = 1
+			)
+		formatString: 0
+		lineageTag: 886055d6-048e-4c04-b13e-659b31424610
+
+	measure 'Cancellation Rate CY' = ```
+			
+			DIVIDE(
+			    [Total Canceled Bookings],
+			    [Total Bookings],
+			    0
+			)
+			
+			```
+		formatString: 0%;-0%;0%
+		lineageTag: 8a5ee329-ac7d-426a-84c0-abfea02d3aa2
+
+	measure 'Cancellation Rate LY' = ```
+			
+			CALCULATE(
+			    [Cancellation Rate CY],
+			    SAMEPERIODLASTYEAR(dim_Calendar[Date])
+			)
+			
+			```
+		formatString: 0.00%;-0.00%;0.00%
+		lineageTag: 681627a5-6ad0-4fba-8b61-9b2a9c64be96
+
+	measure 'Cancellation Rate Change %' = ```
+			
+			DIVIDE(
+			    [Cancellation Rate CY] - [Cancellation Rate LY],
+			    [Cancellation Rate LY],
+			    0
+			)
+			
+			```
+		lineageTag: 5b4e4fb2-0e75-492b-bc7e-053bae4c4ea1
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Total Bookings - Repeated Customers' =
+			
+			CALCULATE(
+			    COUNTROWS(fact_bookings),
+			    dim_customer[is_repeated_guest] = 1
+			)
+		formatString: 0
+		lineageTag: 612bf746-cb1a-40e0-8df2-368edfaa2b57
+
+	measure 'Canceled Bookings - Repeated Customers' =
+			
+			CALCULATE(
+			    COUNTROWS(fact_bookings),
+			    dim_customer[is_repeated_guest] = 1,
+			    fact_bookings[is_canceled] = 1
+			)
+		formatString: 0
+		lineageTag: 2b9556af-ac5b-4d46-999f-7a4f955adfb8
+
+	measure 'Cancellation Rate - Repeated Customers' = ```
+			
+			DIVIDE(
+			    [Canceled Bookings - Repeated Customers],
+			    [Total Bookings - Repeated Customers],
+			    0
+			)
+			
+			```
+		lineageTag: d1721da2-74a0-4b79-9b28-36a53e78f7a7
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	measure 'Avg Waiting Days' = ```
+			
+			ROUNDUP(
+			    AVERAGE(fact_bookings[days_in_waiting_list]),
+			    0
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 9d3bf7be-cae8-4051-8ed1-31412d0a0dfa
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Avg Stay (Nights)' =
+			
+			DIVIDE(
+			    SUMX(Fact_Bookings, Fact_Bookings[stays_in_week_nights] + Fact_Bookings[stays_in_weekend_nights]),
+			    COUNTROWS(Fact_Bookings),
+			    0
+			)
+		formatString: 0
+		lineageTag: fafc1234-3f43-41f5-b1ad-b2f38a32ffc7
+
+		annotation PBI_FormatHint = {"isDecimal":true}
+
+	measure 'Total Young Guests' =
+			
+			SUM(fact_bookings[children]) + SUM(fact_bookings[babies])
+		formatString: 0
+		lineageTag: ee0c74dc-da83-44a5-933a-c48ef30e8166
+
+	measure 'Day Stay Bookings' = ```
+			
+			CALCULATE(
+			    COUNTROWS(Fact_Bookings),
+			    Fact_Bookings[stays_in_week_nights] = 0,
+			    Fact_Bookings[stays_in_weekend_nights] = 0
+			)
+			
+			```
+		formatString: 0
+		lineageTag: 15bfa658-6189-42e5-8a07-f74b486017f9
+
+	measure 'Highest Guest Count Month' = ```
+			
+			VAR GuestByMonth =
+			    SUMMARIZE(
+			        Fact_Bookings,
+			        Fact_Bookings[arrival_date_month],
+			        "TotalGuests", [Total Guests]
+			    )
+			VAR MaxGuests =
+			    MAXX(GuestByMonth, [TotalGuests])
+			RETURN
+			    MAXX(
+			        FILTER(GuestByMonth, [TotalGuests] = MaxGuests),
+			        Fact_Bookings[arrival_date_month]
+			    )
+			
+			```
+		lineageTag: 585904de-f213-4f85-b3a1-91f21c4622d3
+
+	measure 'Least Guest Count Month' =
+			
+			VAR GuestByMonth =
+			    SUMMARIZE(
+			        Fact_Bookings,
+			        Fact_Bookings[arrival_date_month],
+			        "TotalGuests", [Total Guests]
+			    )
+			VAR MinGuests =
+			    MINX(GuestByMonth, [TotalGuests])
+			RETURN
+			    MAXX(
+			        FILTER(GuestByMonth, [TotalGuests] = MinGuests),
+			        Fact_Bookings[arrival_date_month]
+			    )
+		lineageTag: 88e5102f-2fb8-40ba-bda5-d9f48cf6eeab
+
+	measure Revenue = ```
+			
+			SUMX(
+			    FILTER(Fact_Bookings, Fact_Bookings[is_canceled] = 0),
+			    (Fact_Bookings[stays_in_week_nights] + Fact_Bookings[stays_in_weekend_nights]) 
+			    * Fact_Bookings[adr]
+			)
+			
+			```
+		formatString: \$#,0.00;(\$#,0.00);\$#,0.00
+		lineageTag: a0fea1a9-bee7-4545-8eac-c3843f945af8
+
+		annotation PBI_FormatHint = {"currencyCulture":"en-US"}
+
+	column is_canceled
+		dataType: int64
+		formatString: 0
+		lineageTag: 9e1783d0-d1da-4118-9b09-970f4ed5ae43
+		summarizeBy: sum
+		sourceColumn: is_canceled
+
+		annotation SummarizationSetBy = Automatic
+
+	column lead_time
+		dataType: int64
+		formatString: 0
+		lineageTag: 12611855-e924-42db-a788-bd5eeda48b71
+		summarizeBy: sum
+		sourceColumn: lead_time
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date_year
+		dataType: int64
+		formatString: 0
+		lineageTag: de6a58a3-c1d5-40fc-a71b-c086eb9c3d44
+		summarizeBy: sum
+		sourceColumn: arrival_date_year
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date_month
+		dataType: string
+		lineageTag: 0f0d356b-9217-4cf6-a5d5-ee553998464d
+		summarizeBy: none
+		sourceColumn: arrival_date_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date_week_number
+		dataType: int64
+		formatString: 0
+		lineageTag: 24cab96f-fa9a-4efe-a160-05df4ff0f217
+		summarizeBy: sum
+		sourceColumn: arrival_date_week_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date_day_of_month
+		dataType: int64
+		formatString: 0
+		lineageTag: fd70f5e4-0072-444d-a3ff-ddb6a0168a1c
+		summarizeBy: sum
+		sourceColumn: arrival_date_day_of_month
+
+		annotation SummarizationSetBy = Automatic
+
+	column stays_in_weekend_nights
+		dataType: int64
+		formatString: 0
+		lineageTag: 7a78a11f-2514-4f9b-8a30-15a721bd2ecd
+		summarizeBy: sum
+		sourceColumn: stays_in_weekend_nights
+
+		annotation SummarizationSetBy = Automatic
+
+	column stays_in_week_nights
+		dataType: int64
+		formatString: 0
+		lineageTag: 214f6ae4-6974-4af3-b5f9-f3266d5ebd43
+		summarizeBy: sum
+		sourceColumn: stays_in_week_nights
+
+		annotation SummarizationSetBy = Automatic
+
+	column adults
+		dataType: int64
+		formatString: 0
+		lineageTag: 0fe29182-3ad6-4d2d-bc8a-1b0fbb814d0d
+		summarizeBy: sum
+		sourceColumn: adults
+
+		annotation SummarizationSetBy = Automatic
+
+	column children
+		dataType: int64
+		formatString: 0
+		lineageTag: d6bdddf2-9405-470c-aae2-24f3fcba47b1
+		summarizeBy: sum
+		sourceColumn: children
+
+		annotation SummarizationSetBy = Automatic
+
+	column babies
+		dataType: int64
+		formatString: 0
+		lineageTag: c429b1fe-9fdf-4403-9da2-611acc84bef8
+		summarizeBy: sum
+		sourceColumn: babies
+
+		annotation SummarizationSetBy = Automatic
+
+	column previous_cancellations
+		dataType: int64
+		formatString: 0
+		lineageTag: 5fe7c868-9d0f-4930-951c-c7a7bcc76b0f
+		summarizeBy: sum
+		sourceColumn: previous_cancellations
+
+		annotation SummarizationSetBy = Automatic
+
+	column previous_bookings_not_canceled
+		dataType: int64
+		formatString: 0
+		lineageTag: 834b4477-5ee6-4f0f-9f56-e58946348bfc
+		summarizeBy: sum
+		sourceColumn: previous_bookings_not_canceled
+
+		annotation SummarizationSetBy = Automatic
+
+	column booking_changes
+		dataType: int64
+		formatString: 0
+		lineageTag: cf107875-bc4b-4155-bb74-54a3a37a829a
+		summarizeBy: sum
+		sourceColumn: booking_changes
+
+		annotation SummarizationSetBy = Automatic
+
+	column days_in_waiting_list
+		dataType: int64
+		formatString: 0
+		lineageTag: 67629a9f-91df-4ecd-a065-79c271289c7b
+		summarizeBy: sum
+		sourceColumn: days_in_waiting_list
+
+		annotation SummarizationSetBy = Automatic
+
+	column adr
+		dataType: double
+		lineageTag: d9cd2e44-ae9c-479b-a8d7-c9410b53e9f5
+		summarizeBy: sum
+		sourceColumn: adr
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation PBI_FormatHint = {"isGeneralNumber":true}
+
+	column required_car_parking_spaces
+		dataType: int64
+		formatString: 0
+		lineageTag: 616fd79f-f13e-4f1c-95b2-609b46ac60da
+		summarizeBy: sum
+		sourceColumn: required_car_parking_spaces
+
+		annotation SummarizationSetBy = Automatic
+
+	column total_of_special_requests
+		dataType: int64
+		formatString: 0
+		lineageTag: 7db12c1d-7a4f-4a8e-8112-753e3bdffd5c
+		summarizeBy: sum
+		sourceColumn: total_of_special_requests
+
+		annotation SummarizationSetBy = Automatic
+
+	column reservation_status
+		dataType: string
+		lineageTag: a76e3f99-46a5-41e2-b1ae-4d5fb54d5e1a
+		summarizeBy: none
+		sourceColumn: reservation_status
+
+		annotation SummarizationSetBy = Automatic
+
+	column reservation_status_date
+		dataType: dateTime
+		formatString: dd-mm-yyyy
+		lineageTag: ebc70a0e-9559-4348-bf54-af483fa5b322
+		summarizeBy: none
+		sourceColumn: reservation_status_date
+
+		variation Variation
+			isDefault
+			relationship: be1bb203-5794-4740-82b3-7a04b107d6ff
+			defaultHierarchy: LocalDateTable_ee631a6f-d344-4c10-9e7a-86e2036619f9.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column market_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2da6ca6f-91c2-4747-aee6-8502984a522a
+		summarizeBy: none
+		sourceColumn: market_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column agent_key
+		dataType: int64
+		formatString: 0
+		lineageTag: d5624062-597f-49b8-af20-558d4a0c12cd
+		summarizeBy: none
+		sourceColumn: agent_key
+
+		annotation SummarizationSetBy = Automatic
+
+	column company_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c975d5a5-dbd1-4f4e-a880-e107da675a52
+		summarizeBy: none
+		sourceColumn: company_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column customer_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 7bbddb5d-48c2-4cc8-9e6f-737396f924f7
+		summarizeBy: none
+		sourceColumn: customer_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column country_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 9f40bceb-1a7d-4654-8b43-fbdb57f984ca
+		summarizeBy: none
+		sourceColumn: country_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column hotel_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 450b0cb0-640f-4669-bb79-7df27e994a29
+		summarizeBy: none
+		sourceColumn: hotel_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column meal_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: f3c63a4d-5a0c-406b-bb30-879ccda6e870
+		summarizeBy: none
+		sourceColumn: meal_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column room_assigned_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: c7e7621d-1788-45b6-b409-3833445ff4f2
+		summarizeBy: none
+		sourceColumn: room_assigned_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column room_reserved_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2ebeda62-c10e-4f56-9521-f6b6de759f55
+		summarizeBy: none
+		sourceColumn: room_reserved_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_month_number
+		dataType: int64
+		formatString: 0
+		lineageTag: 888602fc-f7b5-4b76-ba97-75c8e1bd5150
+		summarizeBy: sum
+		sourceColumn: arrival_month_number
+
+		annotation SummarizationSetBy = Automatic
+
+	column arrival_date
+		dataType: dateTime
+		formatString: dd-mm-yyyy
+		lineageTag: 0104377d-2760-46f1-a846-e2233714710c
+		summarizeBy: none
+		sourceColumn: arrival_date
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	column booking_date
+		dataType: dateTime
+		formatString: dd-mm-yyyy
+		lineageTag: 4c62176c-0054-47d6-b997-af8ab10f744d
+		summarizeBy: none
+		sourceColumn: booking_date
+
+		variation Variation
+			isDefault
+			relationship: 95e55759-24cd-45bf-b360-6ca5b44e8941
+			defaultHierarchy: LocalDateTable_300a065b-05c3-43a5-8b19-d8fab74d973b.'Date Hierarchy'
+
+		annotation SummarizationSetBy = Automatic
+
+		annotation UnderlyingDateTimeDataType = Date
+
+		annotation PBI_FormatHint = {"isDateTimeCustom":true}
+
+	partition fact_bookings = m
+		mode: import
+		queryGroup: fact_table
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Merged Queries" = Table.NestedJoin(Source, {"market_segment", "distribution_channel", "deposit_type"}, dim_market_bridge, {"market_segment", "distribution_channel", "deposit_type"}, "dim_market", JoinKind.LeftOuter),
+				    #"Expanded dim_market" = Table.ExpandTableColumn(#"Merged Queries", "dim_market", {"market_key"}, {"market_key"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Expanded dim_market", {"agent"}, dim_agent, {"agent"}, "dim_agent", JoinKind.LeftOuter),
+				    #"Expanded dim_agent" = Table.ExpandTableColumn(#"Merged Queries1", "dim_agent", {"agent_key"}, {"agent_key"}),
+				    #"Merged Queries2" = Table.NestedJoin(#"Expanded dim_agent", {"company"}, dim_company, {"company"}, "dim_company", JoinKind.LeftOuter),
+				    #"Expanded dim_company" = Table.ExpandTableColumn(#"Merged Queries2", "dim_company", {"company_key"}, {"company_key"}),
+				    #"Merged Queries3" = Table.NestedJoin(#"Expanded dim_company", {"customer_type", "is_repeated_guest"}, dim_customer, {"customer_type", "is_repeated_guest"}, "dim_customer", JoinKind.LeftOuter),
+				    #"Expanded dim_customer" = Table.ExpandTableColumn(#"Merged Queries3", "dim_customer", {"customer_key"}, {"customer_key"}),
+				    #"Merged Queries4" = Table.NestedJoin(#"Expanded dim_customer", {"country"}, dim_geography, {"country"}, "dim_geography", JoinKind.LeftOuter),
+				    #"Expanded dim_geography" = Table.ExpandTableColumn(#"Merged Queries4", "dim_geography", {"country_key"}, {"country_key"}),
+				    #"Merged Queries5" = Table.NestedJoin(#"Expanded dim_geography", {"hotel"}, dim_hotel, {"hotel"}, "dim_hotel", JoinKind.LeftOuter),
+				    #"Expanded dim_hotel" = Table.ExpandTableColumn(#"Merged Queries5", "dim_hotel", {"hotel_key"}, {"hotel_key"}),
+				    #"Merged Queries6" = Table.NestedJoin(#"Expanded dim_hotel", {"meal"}, dim_meal, {"meal"}, "dim_meal", JoinKind.LeftOuter),
+				    #"Expanded dim_meal" = Table.ExpandTableColumn(#"Merged Queries6", "dim_meal", {"meal_key"}, {"meal_key"}),
+				    #"Merged Queries7" = Table.NestedJoin(#"Expanded dim_meal", {"assigned_room_type"}, dim_room_assigned, {"assigned_room_type"}, "dim_room_assigned", JoinKind.LeftOuter),
+				    #"Expanded dim_room_assigned" = Table.ExpandTableColumn(#"Merged Queries7", "dim_room_assigned", {"room_assigned_key"}, {"room_assigned_key"}),
+				    #"Merged Queries8" = Table.NestedJoin(#"Expanded dim_room_assigned", {"reserved_room_type"}, dim_room_reserved, {"reserved_room_type"}, "dim_room_reserved", JoinKind.LeftOuter),
+				    #"Expanded dim_room_reserved" = Table.ExpandTableColumn(#"Merged Queries8", "dim_room_reserved", {"room_reserved_key"}, {"room_reserved_key"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded dim_room_reserved",{"hotel", "meal", "country", "market_segment", "distribution_channel", "is_repeated_guest", "reserved_room_type", "assigned_room_type", "deposit_type", "agent", "company", "customer_type"}),
+				    #"Added arrival_month_number" = Table.AddColumn(#"Removed Columns", "arrival_month_number", each Date.Month(Date.FromText("1 " & [arrival_date_month] & " 2000"))),
+				    #"Added arrival_date" = Table.AddColumn(#"Added arrival_month_number", "arrival_date", each #date([arrival_date_year], [arrival_month_number], [arrival_date_day_of_month])),
+				    #"Changed Type" = Table.TransformColumnTypes(#"Added arrival_date",{{"arrival_month_number", Int64.Type}, {"arrival_date", type date}}),
+				    #"Added booking_date" = Table.AddColumn(#"Changed Type", "booking_date", each Date.AddDays([arrival_date], - Number.From([lead_time]))),
+				    #"Changed Type1" = Table.TransformColumnTypes(#"Added booking_date",{{"booking_date", type date}})
+				in
+				    #"Changed Type1"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

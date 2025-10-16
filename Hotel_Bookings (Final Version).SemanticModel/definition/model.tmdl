@@ -1,0 +1,52 @@
+model Model
+	culture: en-US
+	defaultPowerBIDataSourceVersion: powerBI_V3
+	sourceQueryCulture: en-IN
+	dataAccessOptions
+		legacyRedirects
+		returnErrorValuesAsNull
+
+queryGroup dimension_tables
+
+	annotation PBI_QueryGroupOrder = 1
+
+queryGroup dimension_tables\dim_market
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup 'Source Queries'
+
+	annotation PBI_QueryGroupOrder = 0
+
+queryGroup fact_table
+
+	annotation PBI_QueryGroupOrder = 3
+
+annotation PBI_QueryOrder = ["hotel_staging","dim_hotel","dim_geography","dim_market","dim_distribution_channel","dim_deposit_type","dim_market_bridge","dim_agent","dim_company","dim_room_reserved","dim_room_assigned","dim_customer","dim_meal","fact_bookings","country"]
+
+annotation __PBI_TimeIntelligenceEnabled = 1
+
+annotation PBIDesktopVersion = 2.145.1105.0 (25.07)+decbc46fce458c5b8d5109d6f32a743f2ac949c8
+
+annotation PBI_ProTooling = ["DevMode"]
+
+ref table DateTableTemplate_01b0a3e1-8c3d-4714-ac53-8fedf838c3ac
+ref table dim_hotel
+ref table dim_geography
+ref table dim_market
+ref table dim_agent
+ref table dim_company
+ref table dim_room_reserved
+ref table dim_room_assigned
+ref table dim_customer
+ref table dim_meal
+ref table fact_bookings
+ref table LocalDateTable_ee631a6f-d344-4c10-9e7a-86e2036619f9
+ref table dim_distribution_channel
+ref table dim_deposit_type
+ref table LocalDateTable_300a065b-05c3-43a5-8b19-d8fab74d973b
+ref table dim_Calendar
+ref table LocalDateTable_db2716d3-4c60-4b1d-aafd-2b8f2d7d5e92
+
+ref cultureInfo en-US
+

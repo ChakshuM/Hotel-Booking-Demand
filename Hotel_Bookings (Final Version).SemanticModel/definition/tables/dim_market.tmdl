@@ -1,0 +1,70 @@
+table dim_market
+	lineageTag: 2a72a318-0d7d-4d28-a425-e69afccf9c74
+
+	column market_segment
+		dataType: string
+		lineageTag: e7a7412b-56b3-48b0-b07e-2ccfc45b5678
+		summarizeBy: none
+		sourceColumn: market_segment
+
+		annotation SummarizationSetBy = Automatic
+
+	column market_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 06f3fa4b-9ae3-43b0-b24c-f8c08eef9623
+		summarizeBy: none
+		sourceColumn: market_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column distribution_channel_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 2f25ef6d-f2e2-4b05-856b-fe292f98adef
+		summarizeBy: none
+		sourceColumn: distribution_channel_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	column deposit_type_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: 426c27a3-d413-4be1-93ce-e1053fffa2f9
+		summarizeBy: none
+		sourceColumn: deposit_type_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_market = m
+		mode: import
+		queryGroup: dimension_tables\dim_market
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"market_segment", "distribution_channel", "deposit_type"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "market_key"}}),
+				    #"Merged Queries" = Table.NestedJoin(#"Renamed Columns", {"distribution_channel"}, dim_distribution_channel, {"distribution_channel"}, "dim_market (2)", JoinKind.LeftOuter),
+				    #"Expanded dim_market (2)" = Table.ExpandTableColumn(#"Merged Queries", "dim_market (2)", {"distribution_channel_key"}, {"distribution_channel_key"}),
+				    #"Merged Queries1" = Table.NestedJoin(#"Expanded dim_market (2)", {"deposit_type"}, dim_deposit_type, {"deposit_type"}, "dim_market (3)", JoinKind.LeftOuter),
+				    #"Expanded dim_market (3)" = Table.ExpandTableColumn(#"Merged Queries1", "dim_market (3)", {"deposit_type_key"}, {"deposit_type_key"}),
+				    #"Removed Columns" = Table.RemoveColumns(#"Expanded dim_market (3)",{"distribution_channel", "deposit_type"}),
+				    #"Reordered Columns" = Table.ReorderColumns(#"Removed Columns",{"market_key", "market_segment", "distribution_channel_key", "deposit_type_key"})
+				in
+				    #"Reordered Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

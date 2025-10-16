@@ -1,0 +1,42 @@
+table dim_deposit_type
+	lineageTag: f63f7791-a109-4eff-83b9-c21e516230b5
+
+	column deposit_type
+		dataType: string
+		lineageTag: 74c754d7-44d5-4490-be8c-fa06a33df406
+		summarizeBy: none
+		sourceColumn: deposit_type
+
+		annotation SummarizationSetBy = Automatic
+
+	column deposit_type_key
+		dataType: int64
+		isHidden
+		formatString: 0
+		lineageTag: e0fb1e2e-0c7d-4f3d-8c3d-98f59a402058
+		summarizeBy: none
+		sourceColumn: deposit_type_key
+
+		changedProperty = IsHidden
+
+		annotation SummarizationSetBy = Automatic
+
+	partition dim_deposit_type = m
+		mode: import
+		queryGroup: dimension_tables\dim_market
+		source =
+				let
+				    Source = hotel_staging,
+				    #"Removed Other Columns" = Table.SelectColumns(Source,{"market_segment", "distribution_channel", "deposit_type"}),
+				    #"Removed Duplicates" = Table.Distinct(#"Removed Other Columns"),
+				    #"Removed Columns" = Table.RemoveColumns(#"Removed Duplicates",{"market_segment", "distribution_channel"}),
+				    #"Removed Duplicates1" = Table.Distinct(#"Removed Columns"),
+				    #"Added Index" = Table.AddIndexColumn(#"Removed Duplicates1", "Index", 1, 1, Int64.Type),
+				    #"Renamed Columns" = Table.RenameColumns(#"Added Index",{{"Index", "deposit_type_key"}})
+				in
+				    #"Renamed Columns"
+
+	annotation PBI_NavigationStepName = Navigation
+
+	annotation PBI_ResultType = Table
+

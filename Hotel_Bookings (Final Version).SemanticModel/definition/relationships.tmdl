@@ -1,0 +1,63 @@
+relationship be1bb203-5794-4740-82b3-7a04b107d6ff
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_bookings.reservation_status_date
+	toColumn: LocalDateTable_ee631a6f-d344-4c10-9e7a-86e2036619f9.Date
+
+relationship e9958765-7d5a-423f-a57d-38cd059ceb64
+	fromColumn: fact_bookings.market_key
+	toColumn: dim_market.market_key
+
+relationship 93d7572c-f380-4e89-98ef-3e33f558d1a7
+	fromColumn: dim_market.distribution_channel_key
+	toColumn: dim_distribution_channel.distribution_channel_key
+
+relationship f3175485-2c19-4e59-9c8f-64ec573785d3
+	fromColumn: dim_market.deposit_type_key
+	toColumn: dim_deposit_type.deposit_type_key
+
+relationship AutoDetected_d9ed4d18-739d-4aca-80f7-28d434618aa4
+	fromColumn: fact_bookings.hotel_key
+	toColumn: dim_hotel.hotel_key
+
+relationship AutoDetected_4285ed44-14b6-411f-a6b8-184ceabc29b6
+	fromColumn: fact_bookings.country_key
+	toColumn: dim_geography.country_key
+
+relationship AutoDetected_502c7901-190c-4fb0-a251-62db8873d4bd
+	fromColumn: fact_bookings.agent_key
+	toColumn: dim_agent.agent_key
+
+relationship AutoDetected_3cf0ef20-51f8-46f0-bb42-91aad3f8816e
+	fromColumn: fact_bookings.company_key
+	toColumn: dim_company.company_key
+
+relationship AutoDetected_b0b46517-b472-405c-aee3-7cb03daf6216
+	fromColumn: fact_bookings.room_reserved_key
+	toColumn: dim_room_reserved.room_reserved_key
+
+relationship AutoDetected_6611b3db-cf54-4d03-9698-ec7fef3e4ea5
+	fromColumn: fact_bookings.room_assigned_key
+	toColumn: dim_room_assigned.room_assigned_key
+
+relationship AutoDetected_74282000-5030-4a4e-b564-0fcbf96a1c84
+	fromColumn: fact_bookings.customer_key
+	toColumn: dim_customer.customer_key
+
+relationship AutoDetected_4ddea825-25d1-41e3-8bfa-5eb303371d7e
+	fromColumn: fact_bookings.meal_key
+	toColumn: dim_meal.meal_key
+
+relationship 95e55759-24cd-45bf-b360-6ca5b44e8941
+	joinOnDateBehavior: datePartOnly
+	fromColumn: fact_bookings.booking_date
+	toColumn: LocalDateTable_300a065b-05c3-43a5-8b19-d8fab74d973b.Date
+
+relationship 73452d93-685d-4e75-bb9e-efd55e5cef58
+	joinOnDateBehavior: datePartOnly
+	fromColumn: dim_Calendar.Date
+	toColumn: LocalDateTable_db2716d3-4c60-4b1d-aafd-2b8f2d7d5e92.Date
+
+relationship 68c81e07-6b05-849b-c1c0-9a15aaf3f839
+	fromColumn: fact_bookings.arrival_date
+	toColumn: dim_Calendar.Date
+
