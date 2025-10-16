@@ -111,3 +111,17 @@ By adopting this BI framework, hotels can transition from reactive management to
 ---
 
 ## Demo
+
+- Customer
+  ![Customer](https://github.com/user-attachments/assets/3faf0c73-9072-46a4-bd3b-f049f5d67b4c)
+
+- Booking
+  ![booking](https://github.com/user-attachments/assets/a0d6b0a5-6b4e-4f94-90ee-f7f678c523ae)
+
+- Cancellation
+  ![cancellation2](https://github.com/user-attachments/assets/309281da-9ba4-483e-bc89-0cec0ea6502c)
+
+- Revenue
+  ![Revenue](https://github.com/user-attachments/assets/078b7058-e208-430a-a4b8-16e9578c482f)
+
+  
